@@ -1,2 +1,30 @@
-streamlit
-groq
+# ================= Core Libraries =================
+streamlit==1.30.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+groq==0.1.6
+
+# ================= API Reliability =================
+httpx==0.26.1
+tenacity==8.2.2
+python-dotenv==1.0.0
+
+# ================= History Management & Export =================
+pandas==2.1.1
+streamlit-aggrid==0.4.5
+tinydb==4.7.0
+
+# ================= Database / Multi-User =================
+SQLAlchemy==2.0.23
+
+# ================= AI Image Generation =================
+diffusers==0.21.0
+torch==2.2.0
+
+# ================= Security / Encryption =================
+cryptography==41.0.3
+
+# ================= Alternative AI Clients =================
+openai==0.27.10
+cohere==5.0.1
+replicate==0.11.0
