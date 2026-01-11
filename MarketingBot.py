@@ -1,95 +1,80 @@
 import streamlit as st
 import google.generativeai as genai
 from groq import Groq
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-import json
 
-# 1. إعدادات الواجهة
-st.set_page_config(page_title="Alpha King v5.0", page_icon="👑", layout="wide")
+# 1. إعدادات بسيطة وانيقة
+st.set_page_config(page_title="The Marketing Beast v4.1", page_icon="👹", layout="wide")
 
 def get_config(key):
-    return st.secrets.get(key)
+    try:
+        return st.secrets[key]
+    except:
+        return None
 
-# 2. إعدادات OAuth2 للنشر التلقائي
-CLIENT_CONFIG = {
-    "web": {
-        "client_id": get_config("CLIENT_ID"),
-        "client_secret": get_config("CLIENT_SECRET"),
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-    }
-}
+# 🧠 محرك الكتابة البشرية (Gemini)
+def generate_article(keyword, title, p_link):
+    genai.configure(api_key=get_config("GOOGLE_API_KEY"))
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    prompt = f"""
+    Write a 1500-word SEO article in ARABIC about '{keyword}' with title '{title}'.
+    Target audience: People interested in spiritual wealth and freedom.
+    Include this affiliate link naturally: {p_link}
+    
+    FORMATTING RULES (HTML):
+    - Use <h2> and <h3> for subheadings.
+    - Write in a storytelling, human, and persuasive tone.
+    - Add a 'Table of Contents' at the start.
+    - Place this placeholder for the image: <div style='background:#eee; padding:20px; text-align:center; border-radius:10px;'>📸 [PLACE IMAGE HERE: {keyword}]</div>
+    - End with a strong Call to Action.
+    - Output ONLY HTML code.
+    """
+    response = model.generate_content(prompt)
+    return response.text
 
-# 3. دالة النشر في بلوجر
-def publish_to_blogger(title, content):
-    flow = Flow.from_client_config(
-        CLIENT_CONFIG,
-        scopes=['https://www.googleapis.com/auth/blogger'],
-        redirect_uri='urn:ietf:wg:oauth:2.0:oob' # هادي للموافقة اليدوية السريعة
+# 🎨 محرك وصف الصور (Groq)
+def generate_img_prompt(keyword):
+    client = Groq(api_key=get_config("GROQ_API_KEY"))
+    prompt = f"Create a high-quality AI image prompt for {keyword}. Cinematic, 8k, professional blog style."
+    res = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}]
     )
-    
-    auth_url, _ = flow.authorization_url(prompt='consent')
-    st.write(f"🔐 [برك هنا باش تعطي التصريح للوحش]({auth_url})")
-    code = st.text_input("حط الكود اللي غايعطيك جوجل هنا:")
-    
-    if code:
-        flow.fetch_token(code=code)
-        creds = flow.credentials
-        service = build('blogger', 'v3', credentials=creds)
-        
-        body = {
-            "kind": "blogger#post",
-            "title": title,
-            "content": content,
-            "blog": {"id": get_config("BLOG_ID")}
-        }
-        
-        posts = service.posts()
-        result = posts.insert(blogId=get_config("BLOG_ID"), body=body).execute()
-        return result.get('url')
-    return None
+    return res.choices[0].message.content
 
-# --- المحرك الرئيسي ---
-st.title("👑 Alpha King v5.0: The Ultimate Marketer")
+# --- الواجهة ---
+st.title("👹 The Marketing Beast (Copy/Paste Edition)")
+st.write("Keep it simple, keep it fast. Generate, Copy, and Dominate.")
 
-with st.sidebar:
-    st.header("⚙️ Configuration")
-    st.success("Groq & Gemini: Online")
-    st.info(f"Blog ID: {get_config('BLOG_ID')}")
+col1, col2 = st.columns(2)
+with col1:
+    keyword = st.text_input("🔑 Keyword")
+    title = st.text_input("📝 Article Title")
+with col2:
+    p_link = st.text_input("🔗 Affiliate Link", value="https://hotmart.com/your-link")
 
-tab1, tab2 = st.tabs(["🧪 SEO Lab", "🚀 Social Engine"])
-
-with tab1:
-    col1, col2 = st.columns(2)
-    with col1:
-        keyword = st.text_input("🔑 Keyword")
-        blog_title = st.text_input("📝 Title")
-    with col2:
-        p_link = st.text_input("🔗 Affiliate Link")
-        img_url = st.text_input("🖼️ Image URL")
-
-    if st.button("🚜 Generate Masterpiece"):
-        with st.spinner("The King is writing..."):
-            # محرك Gemini للكتابة البشرية
-            genai.configure(api_key=get_config("GOOGLE_API_KEY"))
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            prompt = f"Write a 1500-word human-style SEO article in Arabic about {keyword}. Title: {blog_title}. Link: {p_link}. Use HTML tags."
-            res = model.generate_content(prompt)
+if st.button("🚜 Generate Masterpiece"):
+    if not get_config("GOOGLE_API_KEY"):
+        st.error("❌ GOOGLE_API_KEY is missing in Secrets!")
+    else:
+        with st.spinner("Writing your article..."):
+            # توليد المقال
+            article = generate_article(keyword, title, p_link)
+            # توليد وصف الصورة
+            img_p = generate_img_prompt(keyword)
             
-            article = res.text
-            if img_url:
-                article = f"<img src='{img_url}' style='width:100%'/><br>" + article
-            
-            st.session_state['final_post'] = article
-            st.markdown(article, unsafe_allow_html=True)
+            st.session_state['article'] = article
+            st.session_state['img_p'] = img_p
 
-    if 'final_post' in st.session_state:
-        if st.button("🚀 Publish Directly to Blogger"):
-            post_url = publish_to_blogger(blog_title, st.session_state['final_post'])
-            if post_url:
-                st.success(f"🔥 تم النشر بنجاح! شوفو هنا: {post_url}")
-
-# محرك Groq للسرعة (Social Media)
-with tab2:
-    st.write("Social Engine is ready for lightning speed!")
+if 'article' in st.session_state:
+    tab1, tab2, tab3 = st.tabs(["📄 HTML Code", "👁️ Preview", "📸 Image Prompt"])
+    
+    with tab1:
+        st.code(st.session_state['article'], language="html")
+        st.button("📋 Copy Code (Manually)")
+    
+    with tab2:
+        st.markdown(st.session_state['article'], unsafe_allow_html=True)
+        
+    with t3:
+        st.info(st.session_state['img_p'])
