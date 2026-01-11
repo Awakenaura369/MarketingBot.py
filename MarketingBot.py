@@ -2,12 +2,12 @@ import streamlit as st
 from groq import Groq
 
 # 1. إعدادات الواجهة
-st.set_page_config(page_title="Groq Beast v1.1", page_icon="👹", layout="wide")
+st.set_page_config(page_title="Groq Beast v1.2", page_icon="👹", layout="wide")
 
 def get_config(key):
     return st.secrets.get(key)
 
-# 🧠 محرك الكتابة البشرية (Groq Stable Mode)
+# 🧠 محرك الكتابة (The New Beast Model)
 def generate_article_with_groq(keyword, title, p_link):
     client = Groq(api_key=get_config("GROQ_API_KEY"))
     
@@ -23,16 +23,16 @@ def generate_article_with_groq(keyword, title, p_link):
     - Output ONLY HTML code.
     """
     
-    # استخدام الموديل الأكثر استقراراً لتجنب BadRequestError
+    # استعملنا الموديل الجديد llama-3.3-70b-versatile
     chat_completion = client.chat.completions.create(
-        model="llama3-8b-8192", 
+        model="llama-3.3-70b-versatile", 
         messages=[{"role": "user", "content": prompt}]
     )
     return chat_completion.choices[0].message.content
 
 # --- الواجهة ---
-st.title("👹 The Pure Groq Beast v1.1")
-st.write("Stable & Fast. No more errors.")
+st.title("👹 The Pure Groq Beast v1.2")
+st.write("Updated to the latest Llama 3.3 model.")
 
 keyword = st.text_input("🔑 Keyword", value="Spiritual")
 title = st.text_input("📝 Title", value="💎 The Spiritual Freedom Code: Escape the Matrix")
@@ -40,10 +40,10 @@ p_link = st.text_input("🔗 Link", value="https://go.hotmart.com/L103130074K")
 
 if st.button("🚜 Unleash Groq"):
     if keyword and title:
-        with st.spinner("Groq is working..."):
+        with st.spinner("Groq is working with the NEW model..."):
             try:
                 article = generate_article_with_groq(keyword, title, p_link)
-                st.success("✅ Success!")
+                st.success("✅ Masterpiece Ready!")
                 
                 t1, t2 = st.tabs(["📄 HTML Code", "👁️ Preview"])
                 with t1:
@@ -53,4 +53,4 @@ if st.button("🚜 Unleash Groq"):
             except Exception as e:
                 st.error(f"Error: {e}")
 
-st.sidebar.info("Status: Stable Mode")
+st.sidebar.info("System: Using Llama 3.3 Versatile")
