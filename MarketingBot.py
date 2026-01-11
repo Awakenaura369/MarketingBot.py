@@ -1,84 +1,109 @@
-import streamlit as st
-from groq import Groq
+import streamlit as st from groq import Groq import os import requests from bs4 import BeautifulSoup import json
 
-# 1. إعدادات الواجهة الاحترافية
-st.set_page_config(page_title="Global All-in-One Beast v1.4", page_icon="👑", layout="wide")
+================== UI Setup ==================
 
-def get_config(key):
-    return st.secrets.get(key)
+st.set_page_config(page_title="Marketing Beast AI v3.3", page_icon="⚡", layout="wide")
 
-# 🧠 محرك الذكاء الشامل (Groq Llama 3.3)
-def unleash_the_beast(keyword, title, p_link):
-    client = Groq(api_key=get_config("GROQ_API_KEY"))
-    
-    # برومبت يجمع كل المهام في طلب واحد لتوفير السرعة
-    main_prompt = f"""
-    You are a master of Tier-1 Affiliate Marketing and SEO. Execute these 3 tasks for:
-    Keyword: {keyword}
-    Title: {title}
-    Link: {p_link}
+st.markdown("""
 
-    TASK 1: Write a 1200-word high-converting SEO article in Perfect English. Include psychology of sales, human-touch, and 2026 trends. Use HTML tags.
-    TASK 2: Generate 5 high-traffic 'Trending Keywords' related to this niche.
-    TASK 3: Generate a professional AI Image Prompt for the article's main banner.
-    
-    Format the output as follows:
-    [KEYWORDS]...[/KEYWORDS]
-    [IMAGE_PROMPT]...[/IMAGE_PROMPT]
-    [ARTICLE_HTML]...[/ARTICLE_HTML]
-    """
-    
-    chat_completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile", 
-        messages=[{"role": "user", "content": main_prompt}]
+<style>
+.stApp { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f8fafc; }
+.stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
+    background-color: #1e293b !important; color: white !important;
+    border: 1px solid #334155 !important; border-radius: 10px !important;
+}
+.stButton>button {
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    color: white; border: none; padding: 12px 24px; border-radius: 10px;
+    font-weight: bold; width: 100%; transition: 0.3s;
+}
+.stButton>button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4); }
+[data-testid="stSidebar"] { background-color: #0f172a; border-right: 1px solid #334155; }
+.content-box { background-color: #1e293b; padding: 20px; border-radius: 15px; border: 1px solid #3b82f6; margin-top: 20px; }
+</style>""", unsafe_allow_html=True)
+
+================== Helper Functions ==================
+
+def get_config(key): if key in st.secrets: return st.secrets[key] return os.environ.get(key)
+
+NICHES = { "Spirituality & Awareness": "Vibrations, manifestation, and emotional healing.", "Make Money Online / Affiliate": "Passive income, financial freedom, and urgency.", "Health & Fitness": "Body transformation, energy, and self-confidence.", "Relationships & Dating": "Attraction, psychological connection, and confidence.", "Tech & AI Tools": "Efficiency, future-proofing, and saving time." }
+
+STYLES = ["Aggressive", "Spiritual", "Storytelling", "Direct"] PLATFORMS = ["Facebook Ad", "Instagram Post", "TikTok Script", "Email Blast"] EMOTIONS = ["Peace", "Power", "Mystery", "Fear"]
+
+--- Generate content with A/B variations ---
+
+def generate_all(niche, style, platform, p_name, p_desc, p_pain, p_link, emotion): api_key = get_config("GROQ_API_KEY") if not api_key: return "⚠️ API Key missing! Please set GROQ_API_KEY." client = Groq(api_key=api_key) niche_focus = NICHES.get(niche, "")
+
+prompt = f"""
+
+You are a Master Marketer expert in {niche_focus}. Generate 3 high-converting {platform} posts in {style} style for '{p_name}' (Benefits: {p_desc}, Pain: {p_pain}, Link: {p_link}). Include 3 CTA variations. Generate 2 alternative versions for A/B testing for each post. Also, generate 1 detailed AI Image prompt for {emotion} emotion representing the niche. Format: ---COPY--- [Post 1 / Post 1B / Post 2 / Post 2B / Post 3 / Post 3B] ---CTA--- [CTA 1 / CTA 2 / CTA 3] ---IMAGE--- [Image Prompt] """
+
+try:
+    completion = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": prompt}]
     )
-    return chat_completion.choices[0].message.content
+    return completion.choices[0].message.content
+except Exception as e:
+    return f"⚠️ Error: {str(e)}"
 
-# --- الواجهة ---
-st.title("👑 Global All-in-One Beast v1.4")
-st.write("Content, Keywords, & Image Prompts in a Single Click.")
+================== Sidebar ==================
 
-col1, col2 = st.columns([2, 1])
+with st.sidebar: st.header("🎯 Strategy Center") selected_niche = st.selectbox("Select Niche", list(NICHES.keys())) selected_style = st.selectbox("Select Style", STYLES) selected_platform = st.selectbox("Target Platform", PLATFORMS) selected_emotion = st.selectbox("Image Emotion", EMOTIONS) st.markdown("---")
 
-with col1:
-    keyword = st.text_input("🔑 Main Keyword", value="Financial Freedom")
-    blog_title = st.text_input("📝 English Title", value="The Hidden Path to Wealth in 2026")
-    p_link = st.text_input("🔗 Affiliate Link", value="https://go.hotmart.com/L103130074K")
+================== Main Inputs ==================
 
-with col2:
-    st.info("✨ This version handles SEO Research + Content + Visual Ideas.")
+col1, col2 = st.columns(2) with col1: p_name = st.text_input("💎 Product Name") with col2: p_link = st.text_input("🔗 Affiliate Link")
 
-if st.button("🚀 UNLEASH THE BEAST (All-in-One)"):
-    if keyword and blog_title:
-        with st.spinner("The Beast is researching and writing everything for you..."):
-            try:
-                raw_result = unleash_the_beast(keyword, blog_title, p_link)
-                st.success("✅ Masterpiece Ready!")
-                
-                # تقطيع النتائج (Parsing)
-                keywords_part = raw_result.split("[KEYWORDS]")[1].split("[/KEYWORDS]")[0].strip()
-                image_prompt_part = raw_result.split("[IMAGE_PROMPT]")[1].split("[/IMAGE_PROMPT]")[0].strip()
-                article_html_part = raw_result.split("[ARTICLE_HTML]")[1].split("[/ARTICLE_HTML]")[0].strip()
-                
-                # عرض النتائج في تابات منظمة
-                t1, t2, t3 = st.tabs(["📄 HTML Article", "📸 Image Prompt", "📈 Trending Keywords"])
-                
-                with t1:
-                    st.code(article_html_part, language="html")
-                    st.markdown("### Live Preview")
-                    st.markdown(article_html_part, unsafe_allow_html=True)
-                
-                with t2:
-                    st.warning("Use this prompt in Leonardo.ai or Midjourney:")
-                    st.write(image_prompt_part)
-                
-                with t3:
-                    st.success("Add these tags to your Blogger post:")
-                    st.write(keywords_part)
-                    
-            except Exception as e:
-                st.error("Error splitting results. Try generating again.")
-                st.write(raw_result)
+p_pain = st.text_input("💔 Customer Pain Point") p_desc = st.text_area("🌟 Main Benefits", height=100)
 
-st.sidebar.markdown("---")
-st.sidebar.write("🛡️ **System:** All-in-One Groq Mode")
+================== Generate Button ==================
+
+if st.button("🚀 UNLEASH THE BEAST"): if all([p_name, p_desc, p_link]): with st.spinner("Generating Marketing Arsenal..."): full_result = generate_all(selected_niche, selected_style, selected_platform, p_name, p_desc, p_pain, p_link, selected_emotion)
+
+parts = full_result.split("---IMAGE---")
+        copy_part = parts[0].split("---CTA---")[0].replace("---COPY---", "")
+        cta_part = parts[0].split("---CTA---")[1] if "---CTA---" in parts[0] else "No CTA generated."
+        image_part = parts[1] if len(parts) > 1 else "No image prompt generated."
+
+        # Save to history (local JSON)
+        history_file = "marketing_history.json"
+        try:
+            try: history = json.load(open(history_file))
+            except: history = []
+            history.append({"product": p_name, "copy": copy_part, "cta": cta_part, "image": image_part})
+            json.dump(history, open(history_file, "w"), indent=2)
+        except: pass
+
+        st.markdown('<div class="content-box">', unsafe_allow_html=True)
+        st.markdown("### 🔥 Your Sales Copy (with A/B variations):")
+        st.markdown(copy_part)
+        st.markdown("---")
+        st.markdown("### 🎯 CTA Options:")
+        st.info(cta_part)
+        st.markdown("---")
+        st.markdown("### 🎨 AI Image Generator Prompt:")
+        st.info(image_part)
+        st.markdown("---")
+
+        # Download output
+        st.download_button("💾 Download Output as TXT", data=f"{copy_part}\n{cta_part}\n{image_part}", file_name=f"{p_name}_marketing.txt")
+
+        # Interactive History
+        st.markdown("### 🕘 History (Last 10 generations)")
+        try:
+            history = json.load(open(history_file))[-10:]
+            for i, item in enumerate(history[::-1], 1):
+                with st.expander(f"{i}. {item['product']}"):
+                    st.markdown("**Copy:**")
+                    st.markdown(item['copy'])
+                    st.markdown("**CTA:**")
+                    st.info(item['cta'])
+                    st.markdown("**Image Prompt:**")
+                    st.info(item['image'])
+        except: st.info("No history available yet.")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.balloons()
+else:
+    st.error("Fill all fields first!")
