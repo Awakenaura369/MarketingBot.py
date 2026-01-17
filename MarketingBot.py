@@ -4,7 +4,7 @@ import os
 
 # ================== UI Setup ==================
 
-st.set_page_config(page_title="Marketing Beast AI v3.5", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Marketing Beast AI v3.6", page_icon="⚡", layout="wide")
 
 st.markdown("""
 <style>
@@ -44,7 +44,7 @@ EMOTIONS = ["Peace", "Power", "Mystery", "Fear"]
 def generate_groq_content(prompt):
     api_key = get_config("GROQ_API_KEY") #
     if not api_key:
-        return "⚠️ API Key missing! Please set GROQ_API_KEY."
+        return "⚠️ API Key missing! Please set GROQ_API_KEY in Secrets."
     try:
         client = Groq(api_key=api_key)
         completion = client.chat.completions.create(
@@ -78,7 +78,7 @@ with tab1:
         p_pain = st.text_input("Pain Point")
         p_link = st.text_input("Affiliate Link")
 
-    if st.button("Generate Ads & Image Prompt"):
+    if st.button("Generate Content"):
         niche_focus = NICHES.get(selected_niche, "")
         prompt = f"Expert {niche_focus} Marketer. Generate 3 {selected_platform} posts ({selected_style} style) for {p_name}. Benefits: {p_desc}. Pain: {p_pain}. Link: {p_link}. Include A/B variations and an AI Image prompt for {selected_emotion}."
         result = generate_groq_content(prompt)
@@ -86,40 +86,45 @@ with tab1:
 
 with tab2:
     st.title("🪝 Facebook Sniper: Full Ad Report") #
-    st.write("Generate 5 complete Viral Ads (Hook + Ad Copy + Image Prompt) with one click.")
+    st.write("Generate 5 complete Viral Ads (Hook + Body + Image Prompt) with NO formatting symbols.")
     
-    topic = st.text_input("Enter your product or niche focus", placeholder="e.g., Orthopedic Neck Pillow")
+    topic = st.text_input("Enter product/niche focus", placeholder="e.g., Organic Anti-Hair Loss Serum")
     
     if st.button("Generate Full Sniper Report 🚀"):
         if topic:
-            # البرومبت اللي كيجمع كلشي فـ تقرير واحد
+            # برومبت صارم يمنع النجمات ويفرض التنسيق النقي
             sniper_prompt = f"""
-            Task: Generate a FULL Ad Report for 5 high-converting Facebook Ads.
-            Product/Topic: {topic}
-            Style: {selected_style}
+            You are a world-class Direct Response Marketer. 
+            Topic: {topic}. Style: {selected_style}. Emotion: {selected_emotion}.
             
-            For EACH of the 5 ads, follow this EXACT structure:
-            1. [AD NUMBER]
-            2. [HOOK]: A scroll-stopping, aggressive opening line.
-            3. [AD COPY]: Persuasive body text focusing on benefits and pain points.
-            4. [IMAGE PROMPT]: A detailed description for an AI image generator (like Midjourney) reflecting '{selected_emotion}' emotion.
-            5. [CTA]: A strong call to action.
+            Task: Generate 5 HIGH-CONVERTING Facebook Ads.
             
-            Language: English. Focus on conversion and urgency.
+            CRITICAL INSTRUCTION: Use ONLY plain text. Do NOT use asterisks (**), hashtags (#), or any markdown symbols for bolding. 
+            
+            Structure for each Ad:
+            --- AD [NUMBER] ---
+            HOOK: [Aggressive & Attention-Grabbing]
+            AD COPY: [Problem-Solution-Benefit text]
+            IMAGE PROMPT: [Detailed visual description for AI generation]
+            CTA: [Strong call to action]
             """
             
-            with st.spinner("Calculating viral trajectories..."):
+            with st.spinner("Engineering your viral report..."):
                 report_content = generate_groq_content(sniper_prompt) #
             
             st.divider()
-            st.markdown("### 📋 Final Report")
+            st.markdown("### 📋 Final Clean Report")
             
-            # عرض التقرير فـ Text Area باش يقدر ينسخو كامل
-            st.text_area("Your 5 Ads Report:", value=report_content, height=450)
+            # عرض التقرير فـ Text Area نقي للنسخ المباشر
+            st.text_area("Copy your ads from here:", value=report_content, height=500)
             
-            # زر النسخ التلقائي للتقرير كامل (Streamlit Native Feature)
-            st.copy_to_clipboard(report_content, before_text="Copy Full Report to Clipboard 📋", after_text="Report Copied! ✅")
-            
-            st.success("Report generated! Use the button above to copy everything to your clipboard.")
+            # زر التحميل كبديل آمن ومضمون 100%
+            st.download_button(
+                label="Download Report as .txt 📄",
+                data=report_content,
+                file_name="facebook_sniper_report.txt",
+                mime="text/plain"
+            )
+            st.success("Report generated successfully! Copy the text above or download the file.")
         else:
-            st.warning("Please enter a topic or niche focus first!")
+            st.warning("Please enter a topic first!")
