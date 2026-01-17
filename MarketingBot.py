@@ -1,13 +1,10 @@
 import streamlit as st
 from groq import Groq
 import os
-import requests
-from bs4 import BeautifulSoup
-import json
 
 # ================== UI Setup ==================
 
-st.set_page_config(page_title="Marketing Beast AI v3.3", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Marketing Beast AI v3.5", page_icon="⚡", layout="wide")
 
 st.markdown("""
 <style>
@@ -45,7 +42,7 @@ PLATFORMS = ["Facebook Ad", "Instagram Post", "TikTok Script", "Email Blast"]
 EMOTIONS = ["Peace", "Power", "Mystery", "Fear"]
 
 def generate_groq_content(prompt):
-    api_key = get_config("GROQ_API_KEY")
+    api_key = get_config("GROQ_API_KEY") #
     if not api_key:
         return "⚠️ API Key missing! Please set GROQ_API_KEY."
     try:
@@ -88,9 +85,41 @@ with tab1:
         st.markdown(f"### Results\n{result}")
 
 with tab2:
-    st.title("🪝 Facebook Sniper: Hook Generator")
-    topic = st.text_input("Enter your post topic or niche focus")
-    if st.button("Generate Viral Hooks"):
-        hook_prompt = f"Generate 5 viral Facebook hooks for the topic: '{topic}'. Focus on high engagement, stopping the scroll, and curiosity. Style: {selected_style}."
-        hooks = generate_groq_content(hook_prompt)
-        st.markdown(f"### Viral Hooks\n{hooks}")
+    st.title("🪝 Facebook Sniper: Full Ad Report") #
+    st.write("Generate 5 complete Viral Ads (Hook + Ad Copy + Image Prompt) with one click.")
+    
+    topic = st.text_input("Enter your product or niche focus", placeholder="e.g., Orthopedic Neck Pillow")
+    
+    if st.button("Generate Full Sniper Report 🚀"):
+        if topic:
+            # البرومبت اللي كيجمع كلشي فـ تقرير واحد
+            sniper_prompt = f"""
+            Task: Generate a FULL Ad Report for 5 high-converting Facebook Ads.
+            Product/Topic: {topic}
+            Style: {selected_style}
+            
+            For EACH of the 5 ads, follow this EXACT structure:
+            1. [AD NUMBER]
+            2. [HOOK]: A scroll-stopping, aggressive opening line.
+            3. [AD COPY]: Persuasive body text focusing on benefits and pain points.
+            4. [IMAGE PROMPT]: A detailed description for an AI image generator (like Midjourney) reflecting '{selected_emotion}' emotion.
+            5. [CTA]: A strong call to action.
+            
+            Language: English. Focus on conversion and urgency.
+            """
+            
+            with st.spinner("Calculating viral trajectories..."):
+                report_content = generate_groq_content(sniper_prompt) #
+            
+            st.divider()
+            st.markdown("### 📋 Final Report")
+            
+            # عرض التقرير فـ Text Area باش يقدر ينسخو كامل
+            st.text_area("Your 5 Ads Report:", value=report_content, height=450)
+            
+            # زر النسخ التلقائي للتقرير كامل (Streamlit Native Feature)
+            st.copy_to_clipboard(report_content, before_text="Copy Full Report to Clipboard 📋", after_text="Report Copied! ✅")
+            
+            st.success("Report generated! Use the button above to copy everything to your clipboard.")
+        else:
+            st.warning("Please enter a topic or niche focus first!")
