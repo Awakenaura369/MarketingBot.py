@@ -1,9 +1,10 @@
 import streamlit as st
 from groq import Groq
-import re
 
+# إعداد الصفحة
 st.set_page_config(page_title="Marketing Beast AI", page_icon="🦁", layout="wide")
 
+# جلب الساروت
 try:
     api_key = st.secrets["GROQ_API_KEY"]
 except KeyError:
@@ -12,69 +13,80 @@ except KeyError:
 
 client = Groq(api_key=api_key)
 
-def clean_text(text):
-    """دالة لمسح النجمات والرموز لتنظيف النص"""
-    return text.replace("**", "").replace("###", "---").replace("`", "")
-
-def generate_fiverr_pro_ads(product, audience, style):
+def generate_aggressive_fiverr_ads(product, audience, style):
+    # برومبت يركز على الشراسة التسويقية والـ Luxury Style
     prompt = f"""
-    Act as a Fiverr Pro Copywriter. Generate 5 high-converting Facebook Ads.
-    Product: {product}
-    Audience: {audience}
-    Style: {style}
+    You are a high-ticket Direct Response Copywriter. 
+    Task: Create 5 AGGRESSIVE and LUXURY style Facebook Ads for '{product}'.
+    Target Audience: {audience}
+    Strategy/Style: {style}
 
-    For each ad, provide:
-    1. VIRAL HOOK: A pattern-interrupting opening.
-    2. AD COPY: Persuasive body text focusing on benefits.
-    3. IMAGE PROMPT: A detailed visual description for AI/Designers.
-    4. CALL TO ACTION: A punchy closing.
+    DELIVERY RULES:
+    1. THE HOOK: Must be a viral, pattern-interrupting statement.
+    2. IMAGE PROMPT: High-end, luxury, cinematic visual description.
+    3. AD COPY: Persuasive, elite, and focuses on deep pain points or status.
+    4. NO MARKDOWN: Do NOT use asterisks (**) or hashes (#). Use plain text only.
 
-    IMPORTANT: Do not use markdown formatting like asterisks or bold text. Keep it professional.
+    FORMAT:
+    AD SET [Number]
+    HOOK: [Text]
+    IMAGE PROMPT: [Text]
+    AD COPY: [Text]
+    CTA: [Text]
+    -------------------------------------------
     """
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "You are a direct response marketing expert. You write clean, professional ad copy without special symbols."},
+                {"role": "system", "content": "You are an aggressive marketing beast. Your copy is elite, expensive, and high-converting. No fluff. No asterisks."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.8
+            temperature=0.9 
         )
         return completion.choices[0].message.content
     except Exception as e:
         return f"Error: {str(e)}"
 
 # --- الواجهة ---
-st.title("🦁 Marketing Beast (Clean Delivery Edition)")
+st.title("🦁 Marketing Beast AI (Elite Sniper Edition)")
 
 tab1, tab2 = st.tabs(["🚀 Dashboard", "🎯 Facebook Sniper"])
 
 with tab2:
-    st.header("🎯 Facebook Sniper (Fiverr Pro)")
+    st.header("🎯 Facebook Sniper (Aggressive & Luxury)")
+    
     col1, col2 = st.columns(2)
     with col1:
-        prod = st.text_input("Product/Service Name:")
-        aud = st.text_input("Target Audience:")
+        prod = st.text_input("Product Name:", placeholder="e.g., Luxy Watch")
+        aud = st.text_input("Audience:", placeholder="e.g., General")
     with col2:
-        stl = st.selectbox("Strategy:", ["Problem-Solution", "Direct Offer", "Curiosity Loop"])
+        # رجعنا ليك الخيارات اللي كنتي كترتاح فيها
+        stl = st.selectbox("Copywriting Style:", [
+            "Aggressive & Direct", 
+            "Luxury & Elite", 
+            "Problem-Solution", 
+            "Storytelling"
+        ])
 
-    if st.button("🚀 Generate Clean Ads"):
+    if st.button("🚀 Launch Sniper Attack"):
         if prod and aud:
-            with st.spinner("Creating your professional delivery..."):
-                raw_results = generate_fiverr_pro_ads(prod, aud, stl)
-                # تنظيف النص من النجمات
-                clean_results = clean_text(raw_results)
+            with st.spinner("Sniper is locking on target..."):
+                results = generate_aggressive_fiverr_ads(prod, aud, stl)
+                st.session_state['elite_ads'] = results
                 
-                st.session_state['clean_ads'] = clean_results
-                
-                # عرض النتيجة منظمة
-                st.text_area("Your Clean Ad Copy (Ready for Fiverr):", clean_results, height=400)
+                # عرض النص بطريقة بروفيسيونال
+                st.text_area("Your Clean & Aggressive Delivery:", results, height=500)
                 
                 st.download_button(
-                    label="📥 Download Clean Text File",
-                    data=clean_results,
-                    file_name=f"Fiverr_Delivery_{prod}.txt",
+                    label="📥 Download Elite Ads (.txt)",
+                    data=results,
+                    file_name=f"Elite_Ads_{prod}.txt",
                     mime="text/plain"
                 )
         else:
-            st.warning("Please fill the details.")
+            st.warning("Please enter product and audience.")
+
+# زر احتياطي
+if 'elite_ads' in st.session_state:
+    st.sidebar.download_button("📥 Re-download Last Ads", st.session_state['elite_ads'], "ads.txt")
